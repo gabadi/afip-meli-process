@@ -33,7 +33,7 @@ func (rr *ReportReader) Read(dir string) error {
 func (rr *ReportReader) readDir(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("error walking dir", err)
+			return fmt.Errorf("error walking dir: %v", err)
 		}
 		if !info.IsDir() && filepath.Ext(path) == ".csv" {
 			err := rr.processCSV(path)

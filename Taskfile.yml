@@ -4,3 +4,6 @@ tasks:
   meli_transactions:
     cmds:
       - go run ./meli_transactions/main.go ./meli_transactions/data/inputs/ ./meli_transactions/data/out/
+  sanitize_galicia:
+    cmds:
+      - go run ./sanitize_galicia_excel_report/main.go ./sanitize_galicia_excel_report/data/inputs/ ./sanitize_galicia_excel_report/data/out/
