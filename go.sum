@@ -1,0 +1,4 @@
+github.com/Rhymond/go-money v1.0.14 h1:HtdIZ0mP4LrnpN3wdRhsik7pool7x22ILZdDe3moL6E=
+github.com/Rhymond/go-money v1.0.14/go.mod h1:iHvCuIvitxu2JIlAlhF0g9jHqjRSr+rpdOs7Omqlupg=
+github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1 h1:FWNFq4fM1wPfcK40yHE5UO3RUdSNPaBC+j3PokzA6OQ=
+github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=

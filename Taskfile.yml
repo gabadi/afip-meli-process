@@ -1,0 +1,6 @@
+version: '3'
+
+tasks:
+  meli_transactions:
+    cmds:
+      - go run ./meli_transactions/main.go ./meli_transactions/data/inputs/ ./meli_transactions/data/out/
