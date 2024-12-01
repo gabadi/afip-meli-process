@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"errors"
 	"fmt"
 	"github.com/xuri/excelize/v2"
 	"log"
@@ -12,25 +11,30 @@ import (
 	"strings"
 )
 
-type ReportRowProcessor interface {
+type UnmarshalCSV interface {
+	UnmarshalCSV(string) error
+}
+
+type ReportRowProcessor[T any] interface {
+	Process(row *T) (bool, error)
 	Close() error
 }
 
-func NewReportReader[T any](processor ReportRowProcessor) *ReportReader[T] {
+func NewReportReader[T any](processor ReportRowProcessor[T]) *ReportReader[T] {
 	return &ReportReader[T]{
-		Processor: processor,
+		processor: processor,
 	}
 }
 
 type ReportReader[T any] struct {
-	Processor ReportRowProcessor
+	processor ReportRowProcessor[T]
 }
 
 func (rr *ReportReader[T]) Read(dir string) error {
 	if err := rr.readDir(dir); err != nil {
 		return err
 	}
-	return rr.Processor.Close()
+	return rr.processor.Close()
 }
 
 func (rr *ReportReader[T]) readDir(dir string) error {
@@ -59,22 +63,29 @@ func (rr *ReportReader[T]) processXlsx(path string) error {
 		}
 	}()
 
+	isEmpty := true
 	for _, sheet := range f.GetSheetList() {
-		err := rr.processSheet(f, sheet)
+		isEmptySheet, err := rr.processSheet(f, sheet)
 		if err != nil {
 			return fmt.Errorf("error processing sheet %s: %v", sheet, err)
 		}
+		if !isEmptySheet {
+			isEmpty = false
+		}
+	}
+	if isEmpty {
+		return fmt.Errorf("no rows were processed from file %s", path)
 	}
 	return nil
 }
 
-func (rr *ReportReader[T]) processSheet(f *excelize.File, sheet string) error {
+func (rr *ReportReader[T]) processSheet(f *excelize.File, sheet string) (bool, error) {
 	rows, err := f.Rows(sheet)
 	if err != nil {
-		return fmt.Errorf("error getting rows: %v", err)
+		return true, fmt.Errorf("error getting rows: %v", err)
 	}
 
-	sheetReader := newExcelSheetReader[T]()
+	sheetReader := newExcelSheetReader[T](rr.processor)
 	defer func(sheetReader *excelSheetReader[T]) {
 		err := sheetReader.Close()
 		if err != nil {
@@ -87,17 +98,22 @@ func (rr *ReportReader[T]) processSheet(f *excelize.File, sheet string) error {
 		i++
 		column, err := rows.Columns()
 		if err != nil {
-			return fmt.Errorf("error getting columns from row %d: %v", i, err)
+			return sheetReader.WasEmpty(), fmt.Errorf("error getting columns from row %d: %v", i, err)
 		}
-		err = sheetReader.Process(column)
+		goOn, err := sheetReader.Process(column)
 		if err != nil {
-			return fmt.Errorf("error processing row number %d: %v", i, err)
+			return sheetReader.WasEmpty(), fmt.Errorf("error processing row number %d: %v", i, err)
+		}
+		if !goOn {
+			return sheetReader.WasEmpty(), nil
 		}
 	}
-	return nil
+	return sheetReader.WasEmpty(), nil
 }
 
-func newExcelSheetReader[T any]() *excelSheetReader[T] {
+func newExcelSheetReader[T any](
+	processor ReportRowProcessor[T],
+) *excelSheetReader[T] {
 	elemType := reflect.TypeOf(new(T)).Elem()
 	elem := reflect.New(elemType).Elem()
 	headers := make([]string, elem.NumField())
@@ -109,19 +125,22 @@ func newExcelSheetReader[T any]() *excelSheetReader[T] {
 	return &excelSheetReader[T]{
 		headersMap: make(map[string]int),
 		headers:    headers,
+		processor:  processor,
 	}
 }
 
 type excelSheetReader[T any] struct {
 	headersMap map[string]int
 	headers    []string
+	processor  ReportRowProcessor[T]
 }
 
 func (esr *excelSheetReader[T]) Close() error {
-	if len(esr.headersMap) == 0 {
-		return errors.New("no rows were processed")
-	}
 	return nil
+}
+
+func (esr *excelSheetReader[T]) WasEmpty() bool {
+	return len(esr.headersMap) == 0
 }
 
 func (esr *excelSheetReader[T]) new() T {
@@ -130,15 +149,15 @@ func (esr *excelSheetReader[T]) new() T {
 	return value.Interface().(T)
 }
 
-func (esr *excelSheetReader[T]) Process(row []string) error {
+func (esr *excelSheetReader[T]) Process(row []string) (bool, error) {
 	if len(esr.headersMap) != 0 {
 		return esr.processReportRow(row)
 	}
 	esr.tryStart(row)
-	return nil
+	return true, nil
 }
 
-func (esr *excelSheetReader[T]) processReportRow(row []string) error {
+func (esr *excelSheetReader[T]) processReportRow(row []string) (bool, error) {
 	elemType := reflect.TypeOf(new(T)).Elem()
 
 	elem := reflect.New(elemType).Elem()
@@ -161,7 +180,7 @@ func (esr *excelSheetReader[T]) processReportRow(row []string) error {
 				}
 				intVal, err := strconv.Atoi(value)
 				if err != nil {
-					return fmt.Errorf("error parsing int value %s: %v", value, err)
+					return false, fmt.Errorf("error parsing int value %s: %v", value, err)
 				}
 				field.SetInt(int64(intVal))
 			case reflect.Float64:
@@ -169,21 +188,33 @@ func (esr *excelSheetReader[T]) processReportRow(row []string) error {
 					field.SetFloat(0)
 					continue
 				}
+				value = strings.Replace(value, ",", "", 10000)
+				value = strings.Replace(value, "$", "", 10000)
+				value = strings.Trim(value, " ")
 				floatVal, err := strconv.ParseFloat(strings.Replace(value, ",", "", 10000), 64)
 				if err != nil {
 					if fieldType.Tag.Get("optional") != "true" {
-						return fmt.Errorf("error parsing float value %s: %v", value, err)
+						return false, fmt.Errorf("error parsing float value %s: %v", value, err)
 					}
 					log.Printf("ignoring error parsing float value %s: %v", value, err)
 				}
 				field.SetFloat(floatVal)
 			default:
-				return fmt.Errorf("unknown field type %s", fieldType.Name)
+				if unmarshaler, ok := interface{}(field.Addr().Interface()).(UnmarshalCSV); ok {
+					if err := unmarshaler.UnmarshalCSV(value); err != nil {
+						return false, fmt.Errorf("error unmarshalling CSV value for %s: %v", fieldType.Name, err)
+					}
+					continue
+				}
+				return false, fmt.Errorf("unknown field type %s in %s", fieldType.Type, fieldType.Name)
 			}
 		}
 	}
-	log.Println(elem.Interface())
-	return nil
+	goOn, err := esr.processor.Process(elem.Addr().Interface().(*T))
+	if err != nil {
+		return false, fmt.Errorf("error processing row: %v", err)
+	}
+	return goOn, nil
 }
 
 func (esr *excelSheetReader[T]) tryStart(row []string) bool {

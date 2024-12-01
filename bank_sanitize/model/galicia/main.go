@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/gabadi/afip-meli-process/sanitize_galicia_excel_report/model"
-	"github.com/gabadi/afip-meli-process/sanitize_galicia_excel_report/reader"
+	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"
 	"log"
 	"os"
 )
@@ -12,6 +11,10 @@ type Closeable struct {
 
 func (c *Closeable) Close() error {
 	return nil
+}
+func (c *Closeable) Process(row *ExcelRow) (bool, error) {
+	log.Println(row)
+	return true, nil
 }
 
 func main() {
@@ -27,7 +30,7 @@ func main() {
 		}
 	}
 
-	reportReader := reader.NewReportReader[model.GaliciaExcelRow](&Closeable{})
+	reportReader := reader.NewReportReader[ExcelRow](&Closeable{})
 
 	err := reportReader.Read(inputDir)
 
