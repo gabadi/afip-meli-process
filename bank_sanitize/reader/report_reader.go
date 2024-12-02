@@ -15,11 +15,6 @@ type UnmarshalCSV interface {
 	UnmarshalCSV(string) error
 }
 
-type ReportRowProcessor[T any] interface {
-	Process(row *T) (bool, error)
-	Close() error
-}
-
 func NewReportReader[T any](processor ReportRowProcessor[T]) *ReportReader[T] {
 	return &ReportReader[T]{
 		processor: processor,
@@ -190,13 +185,14 @@ func (esr *excelSheetReader[T]) processReportRow(row []string) (bool, error) {
 				}
 				value = strings.Replace(value, ",", "", 10000)
 				value = strings.Replace(value, "$", "", 10000)
+				value = strings.Replace(value, " ", "", 10000)
 				value = strings.Trim(value, " ")
 				floatVal, err := strconv.ParseFloat(strings.Replace(value, ",", "", 10000), 64)
 				if err != nil {
 					if fieldType.Tag.Get("optional") != "true" {
 						return false, fmt.Errorf("error parsing float value %s: %v", value, err)
 					}
-					log.Printf("ignoring error parsing float value %s: %v", value, err)
+					log.Printf("OPTIONAL FIELD: ignoring error parsing float value %s: %v", value, err)
 				}
 				field.SetFloat(floatVal)
 			default:

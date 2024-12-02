@@ -1,4 +1,4 @@
-package main
+package galicia
 
 import (
 	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"

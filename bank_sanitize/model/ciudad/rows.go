@@ -11,8 +11,8 @@ type ExcelRow struct {
 	Descripcion string  `excel:"DESCRIPCION"`
 	Referencia  string  `excel:"REFERENCIA"`
 	Debito      float64 `excel:"DEBITOS"`
-	Credito     float64 `excel:"CREDITOS"`
-	Saldo       float64 `excel:"SALDO"`
+	Credito     float64 `excel:"CREDITOS" optional:"true"`
+	Saldo       float64 `excel:"SALDO" optional:"true"`
 }
 
 func NewCiudadSanitizer(processor reader.ReportRowProcessor[ExcelRow]) *Sanitizer {
@@ -26,11 +26,11 @@ type Sanitizer struct {
 }
 
 func (s *Sanitizer) Process(row *ExcelRow) (bool, error) {
-	if strings.HasPrefix(row.Fecha, "SALDO FINAL AL DIA") {
-		return false, nil
-	}
-	if strings.HasPrefix(row.Descripcion, "SALDO FINAL DEL DIA") {
+	if strings.Contains(row.Fecha, "SALDO FINAL AL DIA") || strings.Contains(row.Descripcion, "SALDO FINAL AL DIA") {
 		return true, nil
+	}
+	if row.Fecha == "" && row.Descripcion == "" && row.Referencia == "" {
+		return false, nil
 	}
 	goOn, err := s.processor.Process(row)
 	if err != nil {
