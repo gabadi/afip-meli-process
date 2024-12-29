@@ -4,15 +4,21 @@ import (
 	"log"
 )
 
-func NewPrintCollector[T any]() *PrintCollector[T] {
-	return &PrintCollector[T]{}
+func NewPrintCollector[T any](
+	prefix string,
+) *PrintCollector[T] {
+	return &PrintCollector[T]{
+		prefix: prefix,
+	}
 }
 
 type PrintCollector[T any] struct {
+	prefix string
 }
 
-func (p *PrintCollector[T]) Process(row *T) {
-	log.Println(row)
+func (p *PrintCollector[T]) Process(row *T) (bool, error) {
+	log.Println(p.prefix, ": ", row)
+	return true, nil
 }
 
 func (p *PrintCollector[T]) Close() error {

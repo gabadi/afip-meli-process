@@ -8,8 +8,8 @@ import (
 )
 
 type Summarization[Key comparable] struct {
-	key    *Key
-	amount values.MoneyAmount
+	Key    *Key
+	Amount values.MoneyAmount
 }
 
 type SummarizationByKeyProcessor[T any, Key comparable] struct {
@@ -55,8 +55,8 @@ func (p *SummarizationByKeyProcessor[T, Key]) Process(row *T) (bool, error) {
 func (p *SummarizationByKeyProcessor[T, Key]) Close() error {
 	for key, amount := range p.summarization {
 		processed, err := p.processor.Process(&Summarization[Key]{
-			key:    &key,
-			amount: amount,
+			Key:    &key,
+			Amount: amount,
 		})
 		if err != nil {
 			return fmt.Errorf(
