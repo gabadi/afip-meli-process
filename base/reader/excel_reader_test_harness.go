@@ -1,6 +1,7 @@
 package reader
 
 import (
+	"github.com/gabadi/afip-meli-process/base"
 	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"runtime"
@@ -27,12 +28,12 @@ func currentDir(t *testing.T) string {
 	return filepath.Dir(currentFile)
 }
 
-func ReadTestRows[T any](t *testing.T, processorFactory func(processor ReportRowProcessor[T]) ReportRowProcessor[T]) []T {
+func ReadTestRows[T any](t *testing.T, processorFactory func(processor base.ReportRowProcessor[T]) base.ReportRowProcessor[T]) []T {
 	collector := testProcessor[T]{
 		content: make([]T, 0),
 	}
 	processor := processorFactory(&collector)
-	reportReader := NewReportReader[T](processor)
+	reportReader := NewExcelReader[T](processor)
 	err := reportReader.Read(currentDir(t))
 	assert.NoError(t, err, "Error al procesar los archivos XLSX")
 	return collector.content

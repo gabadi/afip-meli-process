@@ -2,6 +2,7 @@ package reader
 
 import (
 	"fmt"
+	"github.com/gabadi/afip-meli-process/base"
 	"github.com/xuri/excelize/v2"
 	"log"
 	"os"
@@ -15,24 +16,24 @@ type UnmarshalCSV interface {
 	UnmarshalCSV(string) error
 }
 
-func NewReportReader[T any](processor ReportRowProcessor[T]) *ReportReader[T] {
-	return &ReportReader[T]{
+func NewExcelReader[T any](processor base.ReportRowProcessor[T]) *ExcelReader[T] {
+	return &ExcelReader[T]{
 		processor: processor,
 	}
 }
 
-type ReportReader[T any] struct {
-	processor ReportRowProcessor[T]
+type ExcelReader[T any] struct {
+	processor base.ReportRowProcessor[T]
 }
 
-func (rr *ReportReader[T]) Read(dir string) error {
+func (rr *ExcelReader[T]) Read(dir string) error {
 	if err := rr.readDir(dir); err != nil {
 		return err
 	}
 	return rr.processor.Close()
 }
 
-func (rr *ReportReader[T]) readDir(dir string) error {
+func (rr *ExcelReader[T]) readDir(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error walking dir: %v", err)
@@ -47,7 +48,7 @@ func (rr *ReportReader[T]) readDir(dir string) error {
 	})
 }
 
-func (rr *ReportReader[T]) processXlsx(path string) error {
+func (rr *ExcelReader[T]) processXlsx(path string) error {
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return fmt.Errorf("was not able to open file %s: %v", path, err)
@@ -74,7 +75,7 @@ func (rr *ReportReader[T]) processXlsx(path string) error {
 	return nil
 }
 
-func (rr *ReportReader[T]) processSheet(f *excelize.File, sheet string) (bool, error) {
+func (rr *ExcelReader[T]) processSheet(f *excelize.File, sheet string) (bool, error) {
 	rows, err := f.Rows(sheet)
 	if err != nil {
 		return true, fmt.Errorf("error getting rows: %v", err)
@@ -107,7 +108,7 @@ func (rr *ReportReader[T]) processSheet(f *excelize.File, sheet string) (bool, e
 }
 
 func newExcelSheetReader[T any](
-	processor ReportRowProcessor[T],
+	processor base.ReportRowProcessor[T],
 ) *excelSheetReader[T] {
 	elemType := reflect.TypeOf(new(T)).Elem()
 	elem := reflect.New(elemType).Elem()
@@ -127,7 +128,7 @@ func newExcelSheetReader[T any](
 type excelSheetReader[T any] struct {
 	headersMap map[string]int
 	headers    []string
-	processor  ReportRowProcessor[T]
+	processor  base.ReportRowProcessor[T]
 }
 
 func (esr *excelSheetReader[T]) Close() error {

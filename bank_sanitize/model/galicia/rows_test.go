@@ -1,13 +1,14 @@
 package galicia
 
 import (
-	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"
+	"github.com/gabadi/afip-meli-process/base"
+	reader2 "github.com/gabadi/afip-meli-process/base/reader"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestReportReader_Read_GaliciaExcel(t *testing.T) {
-	result := reader.ReadTestRows[ExcelRow](t, func(processor reader.ReportRowProcessor[ExcelRow]) reader.ReportRowProcessor[ExcelRow] {
+	result := reader2.ReadTestRows[ExcelRow](t, func(processor base.ReportRowProcessor[ExcelRow]) base.ReportRowProcessor[ExcelRow] {
 		return NewGaliciaSanitizer(processor)
 	})
 

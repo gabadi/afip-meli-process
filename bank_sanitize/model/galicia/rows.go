@@ -2,7 +2,7 @@ package galicia
 
 import (
 	"fmt"
-	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"
+	"github.com/gabadi/afip-meli-process/base"
 	"strings"
 )
 
@@ -15,7 +15,7 @@ type ExcelRow struct {
 	Saldo       float64 `excel:"Saldo" optional:"true"`
 }
 
-func NewGaliciaSanitizer(processor reader.ReportRowProcessor[ExcelRow]) *GaliciaSanitizer {
+func NewGaliciaSanitizer(processor base.ReportRowProcessor[ExcelRow]) *GaliciaSanitizer {
 	return &GaliciaSanitizer{
 		processor: processor,
 		open:      false,
@@ -24,7 +24,7 @@ func NewGaliciaSanitizer(processor reader.ReportRowProcessor[ExcelRow]) *Galicia
 }
 
 type GaliciaSanitizer struct {
-	processor reader.ReportRowProcessor[ExcelRow]
+	processor base.ReportRowProcessor[ExcelRow]
 	open      bool
 	row       *ExcelRow
 }

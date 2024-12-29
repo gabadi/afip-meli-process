@@ -2,7 +2,7 @@ package santander
 
 import (
 	"fmt"
-	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"
+	"github.com/gabadi/afip-meli-process/base"
 	"strings"
 )
 
@@ -15,14 +15,14 @@ type ExcelRow struct {
 	Saldo       float64 `excel:"Saldo en cuenta"`
 }
 
-func NewSantanderSanitizer(processor reader.ReportRowProcessor[ExcelRow]) *Sanitizer {
+func NewSantanderSanitizer(processor base.ReportRowProcessor[ExcelRow]) *Sanitizer {
 	return &Sanitizer{
 		processor: processor,
 	}
 }
 
 type Sanitizer struct {
-	processor reader.ReportRowProcessor[ExcelRow]
+	processor base.ReportRowProcessor[ExcelRow]
 	date      string
 }
 

@@ -2,7 +2,7 @@ package credicop
 
 import (
 	"fmt"
-	"github.com/gabadi/afip-meli-process/bank_sanitize/reader"
+	"github.com/gabadi/afip-meli-process/base"
 )
 
 type ExcelRow struct {
@@ -14,14 +14,14 @@ type ExcelRow struct {
 	Saldo       float64 `excel:"SALDO"`
 }
 
-func NewCredicopSanitizer(processor reader.ReportRowProcessor[ExcelRow]) *Sanitizer {
+func NewCredicopSanitizer(processor base.ReportRowProcessor[ExcelRow]) *Sanitizer {
 	return &Sanitizer{
 		processor: processor,
 	}
 }
 
 type Sanitizer struct {
-	processor reader.ReportRowProcessor[ExcelRow]
+	processor base.ReportRowProcessor[ExcelRow]
 }
 
 func (s *Sanitizer) Process(row *ExcelRow) (bool, error) {
