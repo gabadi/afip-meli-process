@@ -13,10 +13,11 @@ type brandEarnsKey struct {
 }
 
 type brandEarnsSummarizationResult struct {
-	Brand string             `csv:"marca"`
-	Cost  values.MoneyAmount `csv:"Costo"`
-	Earns values.MoneyAmount `csv:"Ganancia"`
-	ROI   float64            `csv:"ROI"`
+	Brand  string             `csv:"marca"`
+	Cost   values.MoneyAmount `csv:"Costo"`
+	Earns  values.MoneyAmount `csv:"Ganancia"`
+	ROI    float64            `csv:"ROI"`
+	Orders int                `csv:"Cantidad"`
 }
 
 func NewBrandReport(outputDir string) *processor.SummarizationByKeyProcessor[model.ReportRow, brandEarnsKey, model.EarnCost] {
@@ -25,14 +26,16 @@ func NewBrandReport(outputDir string) *processor.SummarizationByKeyProcessor[mod
 			key.Brand = row.ProductBrand
 		}, func(row *model.ReportRow) model.EarnCost {
 			return model.EarnCost{
-				Cost:  row.CostBase,
-				Earns: row.EarnsBase,
+				Cost:   row.CostBase,
+				Earns:  row.EarnsBase,
+				Orders: 1,
 			}
 		}, processor.NewMapperProcessor[processor.Summarization[brandEarnsKey, model.EarnCost], brandEarnsSummarizationResult](
 			func(row *processor.Summarization[brandEarnsKey, model.EarnCost], out *brandEarnsSummarizationResult) {
 				out.Brand = row.Key.Brand
 				out.Earns = row.Aggregation.Earns
 				out.Cost = row.Aggregation.Cost
+				out.Orders = row.Aggregation.Orders
 				out.ROI = row.Aggregation.Roi()
 			}, collector.NewCSVCollector[brandEarnsSummarizationResult](
 				filepath.Join(outputDir, "brand-aggregations.csv"),

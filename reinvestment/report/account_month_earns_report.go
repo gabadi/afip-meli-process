@@ -21,6 +21,7 @@ type accountMonthEarnsSummarizationResult struct {
 	Cost      values.MoneyAmount `csv:"Costo"`
 	Earns     values.MoneyAmount `csv:"Ganancia"`
 	ROI       float64            `csv:"ROI"`
+	Orders    int                `csv:"Cantidad"`
 }
 
 func NewAccountMonthReport(outputDir string) *processor.SummarizationByKeyProcessor[model.ReportRow, accountMonthEarnsKey, model.EarnCost] {
@@ -31,8 +32,9 @@ func NewAccountMonthReport(outputDir string) *processor.SummarizationByKeyProces
 			key.Month = int(row.TransactionDate.Month())
 		}, func(row *model.ReportRow) model.EarnCost {
 			return model.EarnCost{
-				Cost:  row.CostBase,
-				Earns: row.EarnsBase,
+				Cost:   row.CostBase,
+				Earns:  row.EarnsBase,
+				Orders: 1,
 			}
 		}, processor.NewMapperProcessor[processor.Summarization[accountMonthEarnsKey, model.EarnCost], accountMonthEarnsSummarizationResult](
 			func(row *processor.Summarization[accountMonthEarnsKey, model.EarnCost], out *accountMonthEarnsSummarizationResult) {
@@ -41,6 +43,7 @@ func NewAccountMonthReport(outputDir string) *processor.SummarizationByKeyProces
 				out.Year = row.Key.Year
 				out.Earns = row.Aggregation.Earns
 				out.Cost = row.Aggregation.Cost
+				out.Orders = row.Aggregation.Orders
 				out.ROI = row.Aggregation.Roi()
 			}, collector.NewCSVCollector[accountMonthEarnsSummarizationResult](
 				filepath.Join(outputDir, "year-month-account-aggregations.csv"),

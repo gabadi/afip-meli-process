@@ -15,12 +15,13 @@ type brandMonthEarnsKey struct {
 }
 
 type brandMonthEarnsSummarizationResult struct {
-	Brand string             `csv:"marca"`
-	Year  int                `csv:"Ano"`
-	Month int                `csv:"Mes"`
-	Cost  values.MoneyAmount `csv:"Costo"`
-	Earns values.MoneyAmount `csv:"Ganancia"`
-	ROI   float64            `csv:"ROI"`
+	Brand  string             `csv:"marca"`
+	Year   int                `csv:"Ano"`
+	Month  int                `csv:"Mes"`
+	Cost   values.MoneyAmount `csv:"Costo"`
+	Earns  values.MoneyAmount `csv:"Ganancia"`
+	ROI    float64            `csv:"ROI"`
+	Orders int                `csv:"Cantidad"`
 }
 
 func NewBrandMonthReport(outputDir string) *processor.SummarizationByKeyProcessor[model.ReportRow, brandMonthEarnsKey, model.EarnCost] {
@@ -31,8 +32,9 @@ func NewBrandMonthReport(outputDir string) *processor.SummarizationByKeyProcesso
 			key.Month = int(row.TransactionDate.Month())
 		}, func(row *model.ReportRow) model.EarnCost {
 			return model.EarnCost{
-				Cost:  row.CostBase,
-				Earns: row.EarnsBase,
+				Cost:   row.CostBase,
+				Earns:  row.EarnsBase,
+				Orders: 1,
 			}
 		}, processor.NewMapperProcessor[processor.Summarization[brandMonthEarnsKey, model.EarnCost], brandMonthEarnsSummarizationResult](
 			func(row *processor.Summarization[brandMonthEarnsKey, model.EarnCost], out *brandMonthEarnsSummarizationResult) {
@@ -41,6 +43,7 @@ func NewBrandMonthReport(outputDir string) *processor.SummarizationByKeyProcesso
 				out.Year = row.Key.Year
 				out.Earns = row.Aggregation.Earns
 				out.Cost = row.Aggregation.Cost
+				out.Orders = row.Aggregation.Orders
 				out.ROI = row.Aggregation.Roi()
 			}, collector.NewCSVCollector[brandMonthEarnsSummarizationResult](
 				filepath.Join(outputDir, "brand-month-account-aggregations.csv"),

@@ -38,8 +38,9 @@ func (r *ReportRow) CopyFrom(from *ReportRow) {
 }
 
 type EarnCost struct {
-	Earns values.MoneyAmount
-	Cost  values.MoneyAmount
+	Earns  values.MoneyAmount
+	Cost   values.MoneyAmount
+	Orders int
 }
 
 func (ec EarnCost) Roi() float64 {
@@ -68,8 +69,9 @@ func (ec EarnCost) Add(other *EarnCost) *EarnCost {
 		panic(err)
 	}
 	result := &EarnCost{
-		Earns: values.NewMoneyAmount(),
-		Cost:  values.NewMoneyAmount(),
+		Earns:  values.NewMoneyAmount(),
+		Cost:   values.NewMoneyAmount(),
+		Orders: ec.Orders + other.Orders,
 	}
 	result.Earns.Money = resultEarn
 	result.Cost.Money = resultCost
