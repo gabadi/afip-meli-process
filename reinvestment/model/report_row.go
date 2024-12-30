@@ -36,3 +36,42 @@ func (r *ReportRow) CopyFrom(from *ReportRow) {
 	r.CostBase = from.CostBase
 	r.EarnsBase = from.EarnsBase
 }
+
+type EarnCost struct {
+	Earns values.MoneyAmount
+	Cost  values.MoneyAmount
+}
+
+func (ec EarnCost) Roi() float64 {
+	if ec == (EarnCost{}) || ec.Cost.Money.IsZero() {
+		return 1
+	}
+	return (float64(ec.Earns.Amount()) / float64(ec.Cost.Amount())) + 1.0
+}
+
+func (ec EarnCost) Add(other *EarnCost) *EarnCost {
+	if ec == (EarnCost{}) {
+		if other == nil {
+			panic("both nil")
+		}
+		return other
+	}
+	if other == nil {
+		return &ec
+	}
+	resultEarn, err := ec.Earns.Money.Add(other.Earns.Money)
+	if err != nil {
+		panic(err)
+	}
+	resultCost, err := ec.Cost.Money.Add(other.Cost.Money)
+	if err != nil {
+		panic(err)
+	}
+	result := &EarnCost{
+		Earns: values.NewMoneyAmount(),
+		Cost:  values.NewMoneyAmount(),
+	}
+	result.Earns.Money = resultEarn
+	result.Cost.Money = resultCost
+	return result
+}

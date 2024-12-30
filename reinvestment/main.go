@@ -27,8 +27,7 @@ func main() {
 		[]base.ReportRowProcessor[model.ReportRow]{
 			report.NewDuplicatesPrinterReport(),
 			report.NewAccountMonthReport(outputDir),
-			report.NewYearMonthEarnsReport(outputDir),
-			report.NewYearMonthSellCostReport(outputDir),
+			report.NewMonthReport(outputDir),
 		})
 
 	agreementProcessor := model.NewCommercialAgreementMapper(p)
