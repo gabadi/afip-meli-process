@@ -27,6 +27,8 @@ func main() {
 		[]base.ReportRowProcessor[model.ReportRow]{
 			report.NewDuplicatesPrinterReport(),
 			report.NewAccountMonthReport(outputDir),
+			report.NewBrandMonthReport(outputDir),
+			report.NewBrandReport(outputDir),
 			report.NewMonthReport(outputDir),
 		})
 
