@@ -35,6 +35,6 @@ func NewBrandReport(outputDir string) *processor.SummarizationByKeyProcessor[mod
 				out.Cost = row.Aggregation.Cost
 				out.ROI = row.Aggregation.Roi()
 			}, collector.NewCSVCollector[brandEarnsSummarizationResult](
-				filepath.Join(outputDir, "brand-account-aggregations.csv"),
+				filepath.Join(outputDir, "brand-aggregations.csv"),
 			)))
 }
