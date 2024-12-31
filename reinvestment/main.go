@@ -30,6 +30,8 @@ func main() {
 			report.NewBrandMonthReport(outputDir),
 			report.NewBrandReport(outputDir),
 			report.NewMonthReport(outputDir),
+			report.NewDailyReport(outputDir, true),
+			report.NewDailyReport(outputDir, false),
 		})
 
 	agreementProcessor := model.NewCommercialAgreementMapper(p)
