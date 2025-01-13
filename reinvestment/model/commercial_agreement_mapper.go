@@ -13,7 +13,7 @@ func NewCommercialAgreementMapper(p base.ReportRowProcessor[ReportRow]) *process
 	return processor.NewMapperProcessor[ReportRow, ReportRow](
 		func(row *ReportRow, out *ReportRow) {
 			out.CopyFrom(row)
-			if strings.EqualFold(row.ProductBrand, "Sica") {
+			/*if strings.EqualFold(row.ProductBrand, "Sica") {
 				parts, err := out.CostBase.Split(40)
 				if err != nil {
 					panic(err)
@@ -24,7 +24,7 @@ func NewCommercialAgreementMapper(p base.ReportRowProcessor[ReportRow]) *process
 					panic(err)
 				}
 				out.EarnsBase.Money = result
-			}
+			}*/
 			if strings.EqualFold(row.ProductBrand, "Baw") && row.TransactionDate.Before(bawCutoffDate) {
 				parts, err := out.CostBase.Split(20)
 				if err != nil {

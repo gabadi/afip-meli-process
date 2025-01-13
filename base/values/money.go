@@ -5,9 +5,15 @@ import (
 	"strconv"
 )
 
-func NewMoneyAmount() MoneyAmount {
+func NewZeroMoneyAmount() MoneyAmount {
 	return MoneyAmount{
 		Money: money.New(0, "ARS"),
+	}
+}
+
+func NewMoneyAmount(mon *money.Money) MoneyAmount {
+	return MoneyAmount{
+		Money: mon,
 	}
 }
 

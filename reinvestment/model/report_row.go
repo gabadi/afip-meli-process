@@ -5,18 +5,20 @@ import (
 )
 
 type ReportRow struct {
-	SellerId          string             `excel:"vendedor_id"`
-	TransactionId     string             `excel:"transaccion_id"`
-	TransactionAmount values.MoneyAmount `excel:"transaccion_monto"`
-	TransactionType   string             `excel:"transaccion_tipo"`
-	TransactionDate   values.Date        `excel:"transaccion_date"`
-	ShippingType      string             `excel:"orden_envio"`
-	Product           string             `excel:"orden_product"`
-	ProductBrand      string             `excel:"orden_product_marca"`
-	ProductID         int                `excel:"orden_product_id"`
-	ReinvestmentBase  values.MoneyAmount `excel:"reinversion_base"`
-	CostBase          values.MoneyAmount `excel:"costo_base"`
-	EarnsBase         values.MoneyAmount `excel:"ganancia_base"`
+	SellerId                string             `excel:"vendedor_id"`
+	TransactionId           string             `excel:"transaccion_id"`
+	TransactionAmount       values.MoneyAmount `excel:"transaccion_monto"`
+	TransactionType         string             `excel:"transaccion_tipo"`
+	TransactionDate         values.Date        `excel:"transaccion_date"`
+	ShippingType            string             `excel:"orden_envio"`
+	Product                 string             `excel:"orden_product"`
+	ProductBrand            string             `excel:"orden_product_marca"`
+	ProductID               int                `excel:"orden_product_id"`
+	ReinvestmentBase        values.MoneyAmount `excel:"reinversion_base"`
+	CostBase                values.MoneyAmount `excel:"costo_base"`
+	EarnsBase               values.MoneyAmount `excel:"ganancia_base"`
+	GrossReinvestmentIva105 values.MoneyAmount `excel:"reinversion_iva105_base"`
+	GrossReinvestmentIva21  values.MoneyAmount `excel:"reinversion_iva21_base"`
 }
 
 func (r *ReportRow) CopyFrom(from *ReportRow) {
@@ -35,6 +37,8 @@ func (r *ReportRow) CopyFrom(from *ReportRow) {
 	r.ReinvestmentBase = from.ReinvestmentBase
 	r.CostBase = from.CostBase
 	r.EarnsBase = from.EarnsBase
+	r.GrossReinvestmentIva21 = from.GrossReinvestmentIva21
+	r.GrossReinvestmentIva105 = from.GrossReinvestmentIva105
 }
 
 type EarnCost struct {
@@ -69,8 +73,8 @@ func (ec EarnCost) Add(other *EarnCost) *EarnCost {
 		panic(err)
 	}
 	result := &EarnCost{
-		Earns:  values.NewMoneyAmount(),
-		Cost:   values.NewMoneyAmount(),
+		Earns:  values.NewZeroMoneyAmount(),
+		Cost:   values.NewZeroMoneyAmount(),
 		Orders: ec.Orders + other.Orders,
 	}
 	result.Earns.Money = resultEarn

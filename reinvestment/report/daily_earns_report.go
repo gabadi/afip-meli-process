@@ -36,8 +36,8 @@ func NewDailyReport(outputDir string, withMelech bool) *processor.SummarizationB
 		}, func(row *model.ReportRow) model.EarnCost {
 			if !withMelech && strings.EqualFold(row.ProductBrand, "Melech") {
 				return model.EarnCost{
-					Cost:  values.NewMoneyAmount(),
-					Earns: values.NewMoneyAmount(),
+					Cost:  values.NewZeroMoneyAmount(),
+					Earns: values.NewZeroMoneyAmount(),
 				}
 			}
 			return model.EarnCost{

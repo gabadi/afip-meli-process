@@ -33,6 +33,7 @@ func main() {
 			report.NewDailyAccountReport(outputDir),
 			report.NewDailyReport(outputDir, true),
 			report.NewDailyReport(outputDir, false),
+			report.NewMonthMelechReinvestmentReport(outputDir),
 		})
 
 	agreementProcessor := model.NewCommercialAgreementMapper(p)
