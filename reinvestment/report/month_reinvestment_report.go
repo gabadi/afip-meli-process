@@ -1,6 +1,7 @@
 package report
 
 import (
+	"github.com/Rhymond/go-money"
 	"github.com/gabadi/afip-meli-process/base/collector"
 	"github.com/gabadi/afip-meli-process/base/processor"
 	"github.com/gabadi/afip-meli-process/base/values"
@@ -17,6 +18,11 @@ type monthReinvestmentResult struct {
 	PendingAccreditationIva21  values.MoneyAmount `csv:"PendienteAcreditacionIva21"`
 	AccreditedIva105           values.MoneyAmount `csv:"AcreditadoIva105"`
 	PendingAccreditationIva105 values.MoneyAmount `csv:"PendienteAcreditacionIva105"`
+	RealFinalCost              values.MoneyAmount `csv:"CostoRealFinal"`
+	RealFinalReinvestment      values.MoneyAmount `csv:"ReinversionFinalReal"`
+	GamaEarn                   values.MoneyAmount `csv:"GananciaGama"`
+	GamaEarnFinal              values.MoneyAmount `csv:"GananciaGamaFinal"`
+	RoiMelechReinvestment      float64            `csv:"ROIMelechReinversion"`
 }
 
 type reinvestmentAggregations struct {
@@ -24,6 +30,9 @@ type reinvestmentAggregations struct {
 	PendingAccreditationIva21  values.MoneyAmount
 	AccreditedIva105           values.MoneyAmount
 	PendingAccreditationIva105 values.MoneyAmount
+	RealFinalCost              values.MoneyAmount
+	RealFinalReinvestment      values.MoneyAmount
+	GamaEarn                   values.MoneyAmount
 }
 
 func (ra reinvestmentAggregations) Add(other *reinvestmentAggregations) *reinvestmentAggregations {
@@ -52,11 +61,26 @@ func (ra reinvestmentAggregations) Add(other *reinvestmentAggregations) *reinves
 	if err != nil {
 		panic(err)
 	}
+	RealFinalCost, err := ra.RealFinalCost.Money.Add(other.RealFinalCost.Money)
+	if err != nil {
+		panic(err)
+	}
+	RealFinalReinvestment, err := ra.RealFinalReinvestment.Money.Add(other.RealFinalReinvestment.Money)
+	if err != nil {
+		panic(err)
+	}
+	GamaEarn, err := ra.GamaEarn.Money.Add(other.GamaEarn.Money)
+	if err != nil {
+		panic(err)
+	}
 	return &reinvestmentAggregations{
 		PendingAccreditationIva21:  values.NewMoneyAmount(PendingAccreditationIva21),
 		PendingAccreditationIva105: values.NewMoneyAmount(PendingAccreditationIva105),
 		AccreditedIva21:            values.NewMoneyAmount(AccreditedIva21),
 		AccreditedIva105:           values.NewMoneyAmount(AccreditedIva105),
+		RealFinalCost:              values.NewMoneyAmount(RealFinalCost),
+		RealFinalReinvestment:      values.NewMoneyAmount(RealFinalReinvestment),
+		GamaEarn:                   values.NewMoneyAmount(GamaEarn),
 	}
 }
 
@@ -74,6 +98,9 @@ func NewMonthMelechReinvestmentReport(outputDir string) *processor.Summarization
 					PendingAccreditationIva21:  values.NewZeroMoneyAmount(),
 					AccreditedIva105:           values.NewZeroMoneyAmount(),
 					PendingAccreditationIva105: values.NewZeroMoneyAmount(),
+					RealFinalCost:              values.NewZeroMoneyAmount(),
+					RealFinalReinvestment:      values.NewZeroMoneyAmount(),
+					GamaEarn:                   values.NewZeroMoneyAmount(),
 				}
 			}
 			Reinvestment21 := row.GrossReinvestmentIva21
@@ -87,11 +114,10 @@ func NewMonthMelechReinvestmentReport(outputDir string) *processor.Summarization
 				panic(err)
 			}
 
-			//parts := int64(2)
-			//if row.TransactionDate.Year() > 2024 || row.TransactionDate.Month() > 9 {
-			//	parts = 3
-			//}
-			parts := int64(4)
+			parts := int64(2)
+			if row.TransactionDate.Year() > 2024 || row.TransactionDate.Month() > 9 {
+				parts = 3
+			}
 
 			R105, err := Reinvestment105.Subtract(Reinvestment105Part[0].Multiply(parts))
 			if err != nil {
@@ -108,6 +134,9 @@ func NewMonthMelechReinvestmentReport(outputDir string) *processor.Summarization
 					PendingAccreditationIva21:  values.NewMoneyAmount(R21),
 					AccreditedIva105:           values.NewZeroMoneyAmount(),
 					PendingAccreditationIva105: values.NewMoneyAmount(R105),
+					RealFinalCost:              row.MelechFinalCost,
+					RealFinalReinvestment:      row.MelechFinalReinvestment,
+					GamaEarn:                   row.EarnsBase,
 				}
 			} else {
 				return reinvestmentAggregations{
@@ -115,6 +144,9 @@ func NewMonthMelechReinvestmentReport(outputDir string) *processor.Summarization
 					PendingAccreditationIva21:  values.NewZeroMoneyAmount(),
 					AccreditedIva105:           values.NewMoneyAmount(R105),
 					PendingAccreditationIva105: values.NewZeroMoneyAmount(),
+					RealFinalCost:              row.MelechFinalCost,
+					RealFinalReinvestment:      row.MelechFinalReinvestment,
+					GamaEarn:                   row.EarnsBase,
 				}
 			}
 		}, processor.NewMapperProcessor[processor.Summarization[monthEarnsKey, reinvestmentAggregations], monthReinvestmentResult](
@@ -125,7 +157,17 @@ func NewMonthMelechReinvestmentReport(outputDir string) *processor.Summarization
 				out.AccreditedIva21 = row.Aggregation.AccreditedIva21
 				out.PendingAccreditationIva105 = row.Aggregation.PendingAccreditationIva105
 				out.PendingAccreditationIva21 = row.Aggregation.PendingAccreditationIva21
+				out.RealFinalCost = row.Aggregation.RealFinalCost
+				out.RealFinalReinvestment = row.Aggregation.RealFinalReinvestment
+				out.GamaEarn = row.Aggregation.GamaEarn
+
+				iva21Proportion := out.AccreditedIva21.AsMajorUnits() / (out.AccreditedIva21.AsMajorUnits() + out.AccreditedIva105.AsMajorUnits())
+				iva105Proportion := 1.0 - iva21Proportion
+
+				GamaEarn := row.Aggregation.GamaEarn.AsMajorUnits()
+				out.GamaEarnFinal = values.NewMoneyAmount(money.NewFromFloat(GamaEarn*iva21Proportion*1.21+GamaEarn*iva105Proportion*1.105, "ARS"))
+				out.RoiMelechReinvestment = (out.RealFinalReinvestment.AsMajorUnits() - out.GamaEarnFinal.AsMajorUnits()) / out.RealFinalCost.AsMajorUnits()
 			}, collector.NewCSVCollector[monthReinvestmentResult](
-				filepath.Join(outputDir, "melech-reinvestment-report.csv"),
+				filepath.Join(outputDir, "year-month-melech-reinvestment-report.csv"),
 			)))
 }

@@ -19,6 +19,8 @@ type ReportRow struct {
 	EarnsBase               values.MoneyAmount `excel:"ganancia_base"`
 	GrossReinvestmentIva105 values.MoneyAmount `excel:"reinversion_iva105_base"`
 	GrossReinvestmentIva21  values.MoneyAmount `excel:"reinversion_iva21_base"`
+	MelechFinalCost         values.MoneyAmount `excel:"costo_melech_final"`
+	MelechFinalReinvestment values.MoneyAmount `excel:"ganancia_melech_final"`
 }
 
 func (r *ReportRow) CopyFrom(from *ReportRow) {
@@ -39,6 +41,8 @@ func (r *ReportRow) CopyFrom(from *ReportRow) {
 	r.EarnsBase = from.EarnsBase
 	r.GrossReinvestmentIva21 = from.GrossReinvestmentIva21
 	r.GrossReinvestmentIva105 = from.GrossReinvestmentIva105
+	r.MelechFinalReinvestment = from.MelechFinalReinvestment
+	r.MelechFinalCost = from.MelechFinalCost
 }
 
 type EarnCost struct {
