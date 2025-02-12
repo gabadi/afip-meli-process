@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type ExcelRow struct {
@@ -55,17 +54,15 @@ func collectGalicia(collect base.ReportRowProcessor[ExcelRow], inputDir string) 
 	reportReader := reader2.NewExcelReader(
 		galicia.NewGaliciaSanitizer(
 			processor.NewMapperProcessor[galicia.ExcelRow, ExcelRow](
-				collect,
-				func(row *galicia.ExcelRow) *ExcelRow {
-					return &ExcelRow{
-						Fecha:       row.Fecha,
-						Descripcion: row.Descripcion,
-						Referencia:  row.Origen,
-						Debito:      row.Debito,
-						Credito:     row.Credito,
-						Fuente:      "GALICIA",
-					}
+				func(row *galicia.ExcelRow, out *ExcelRow) {
+					out.Fecha = row.Fecha
+					out.Descripcion = row.Descripcion
+					out.Referencia = row.Origen
+					out.Debito = row.Debito
+					out.Credito = row.Credito
+					out.Fuente = "GALICIA"
 				},
+				collect,
 			),
 		))
 
@@ -76,17 +73,15 @@ func collectSantander(collect base.ReportRowProcessor[ExcelRow], inputDir string
 	reportReader := reader2.NewExcelReader(
 		santander.NewSantanderSanitizer(
 			processor.NewMapperProcessor[santander.ExcelRow, ExcelRow](
-				collect,
-				func(row *santander.ExcelRow) *ExcelRow {
-					return &ExcelRow{
-						Fecha:       row.Fecha,
-						Descripcion: row.Descripcion,
-						Referencia:  row.Referencia,
-						Debito:      row.Debito,
-						Credito:     row.Credito,
-						Fuente:      "SANTANDER",
-					}
+				func(row *santander.ExcelRow, out *ExcelRow) {
+					out.Fecha = row.Fecha
+					out.Descripcion = row.Descripcion
+					out.Referencia = row.Referencia
+					out.Debito = row.Debito
+					out.Credito = row.Credito
+					out.Fuente = "SANTANDER"
 				},
+				collect,
 			),
 		))
 
@@ -97,17 +92,15 @@ func collectCiudad(collect base.ReportRowProcessor[ExcelRow], inputDir string) e
 	reportReader := reader2.NewExcelReader(
 		ciudad.NewCiudadSanitizer(
 			processor.NewMapperProcessor[ciudad.ExcelRow, ExcelRow](
-				collect,
-				func(row *ciudad.ExcelRow) *ExcelRow {
-					return &ExcelRow{
-						Fecha:       strings.Trim(row.Fecha, " "),
-						Descripcion: strings.Trim(row.Descripcion, " "),
-						Referencia:  strings.Trim(row.Referencia, " "),
-						Debito:      row.Debito,
-						Credito:     row.Credito,
-						Fuente:      "CIUDAD",
-					}
+				func(row *ciudad.ExcelRow, out *ExcelRow) {
+					out.Fecha = row.Fecha
+					out.Descripcion = row.Descripcion
+					out.Referencia = row.Referencia
+					out.Debito = row.Debito
+					out.Credito = row.Credito
+					out.Fuente = "CIUDAD"
 				},
+				collect,
 			),
 		))
 
@@ -118,17 +111,15 @@ func collectCredicop(collect base.ReportRowProcessor[ExcelRow], inputDir string)
 	reportReader := reader2.NewExcelReader(
 		credicop.NewCredicopSanitizer(
 			processor.NewMapperProcessor[credicop.ExcelRow, ExcelRow](
-				collect,
-				func(row *credicop.ExcelRow) *ExcelRow {
-					return &ExcelRow{
-						Fecha:       row.Fecha,
-						Descripcion: row.Descripcion,
-						Referencia:  row.Referencia,
-						Debito:      row.Debito,
-						Credito:     row.Credito,
-						Fuente:      "CREDICOP",
-					}
+				func(row *credicop.ExcelRow, out *ExcelRow) {
+					out.Fecha = row.Fecha
+					out.Descripcion = row.Descripcion
+					out.Referencia = row.Referencia
+					out.Debito = row.Debito
+					out.Credito = row.Credito
+					out.Fuente = "CREDICOP"
 				},
+				collect,
 			),
 		))
 
